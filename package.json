@@ -1,0 +1,12 @@
+{
+  "name": "twitter-webhook",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "oauth-1.0a": "^2.2.6",
+    "crypto-js": "^4.2.0"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}
