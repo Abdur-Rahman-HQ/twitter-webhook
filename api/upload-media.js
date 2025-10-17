@@ -13,6 +13,7 @@ function generateOAuthHeader(method, url, params, consumerKey, consumerSecret, t
     oauth_version: '1.0'
   };
   
+  // For media upload, we need to include form params in signature
   const allParams = { ...oauthParams, ...params };
   const sortedKeys = Object.keys(allParams).sort();
   const paramString = sortedKeys.map(key => `${encodeURIComponent(key)}=${encodeURIComponent(allParams[key])}`).join('&');
@@ -24,6 +25,7 @@ function generateOAuthHeader(method, url, params, consumerKey, consumerSecret, t
   oauthParams.oauth_signature = signature;
   
   const authHeader = 'OAuth ' + Object.keys(oauthParams)
+    .sort()
     .map(key => `${encodeURIComponent(key)}="${encodeURIComponent(oauthParams[key])}"`)
     .join(', ');
   
@@ -45,18 +47,19 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'media_data is required' });
     }
     
+    // Don't include media_data in OAuth signature - it's too large
     const authHeader = generateOAuthHeader(
       'POST',
       'https://upload.twitter.com/1.1/media/upload.json',
-      {},
+      {}, // Empty params - media_data excluded from signature
       process.env.TWITTER_API_KEY,
       process.env.TWITTER_API_SECRET,
       process.env.TWITTER_ACCESS_TOKEN,
       process.env.TWITTER_ACCESS_TOKEN_SECRET
     );
     
-    const formData = new URLSearchParams();
-    formData.append('media_data', media_data);
+    const formBody = new URLSearchParams();
+    formBody.append('media_data', media_data);
     
     const response = await fetch('https://upload.twitter.com/1.1/media/upload.json', {
       method: 'POST',
@@ -64,18 +67,24 @@ export default async function handler(req, res) {
         'Authorization': authHeader,
         'Content-Type': 'application/x-www-form-urlencoded'
       },
-      body: formData
+      body: formBody.toString()
     });
     
     const data = await response.json();
     
     if (!response.ok) {
+      console.error('Media upload error:', data);
       return res.status(response.status).json({ error: data });
     }
     
-    return res.status(200).json({ success: true, media_id_string: data.media_id_string });
+    return res.status(200).json({ 
+      success: true, 
+      media_id_string: data.media_id_string,
+      media_id: data.media_id 
+    });
     
   } catch (error) {
+    console.error('Exception:', error);
     return res.status(500).json({ error: error.message });
   }
 }
