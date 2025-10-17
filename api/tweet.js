@@ -43,6 +43,7 @@ export default async function handler(req, res) {
     
     const body = { text };
     if (reply_to) body.reply = { in_reply_to_tweet_id: reply_to };
+    if (req.body.media_ids) body.media = { media_ids: req.body.media_ids };
     
     const authHeader = generateOAuthHeader(
       'POST',
