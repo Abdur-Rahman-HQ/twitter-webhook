@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
-    "oauth-1.0a": "^2.2.6",
-    "crypto-js": "^4.2.0"
+    "twitter-api-v2": "^1.17.2"
   },
   "engines": {
     "node": "22.x"
