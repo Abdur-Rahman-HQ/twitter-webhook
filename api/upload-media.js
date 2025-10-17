@@ -13,6 +13,7 @@ function generateOAuthHeader(method, url, params, consumerKey, consumerSecret, t
     oauth_version: '1.0'
   };
   
+  // For media upload, DO NOT include the media_data in signature
   const allParams = { ...oauthParams, ...params };
   const sortedKeys = Object.keys(allParams).sort();
   const paramString = sortedKeys.map(key => `${encodeURIComponent(key)}=${encodeURIComponent(allParams[key])}`).join('&');
@@ -45,10 +46,14 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'media_data is required' });
     }
     
+    // Remove any data URI prefix if present
+    const base64Data = media_data.replace(/^data:image\/\w+;base64,/, '');
+    
+    // Generate OAuth header with EMPTY params (media_data is NOT in signature)
     const authHeader = generateOAuthHeader(
       'POST',
       'https://upload.twitter.com/1.1/media/upload.json',
-      {},
+      {}, // Empty - do NOT include media_data here
       process.env.TWITTER_API_KEY,
       process.env.TWITTER_API_SECRET,
       process.env.TWITTER_ACCESS_TOKEN,
@@ -56,7 +61,7 @@ export default async function handler(req, res) {
     );
     
     const formData = new URLSearchParams();
-    formData.append('media_data', media_data);
+    formData.append('media_data', base64Data);
     
     const response = await fetch('https://upload.twitter.com/1.1/media/upload.json', {
       method: 'POST',
@@ -64,7 +69,7 @@ export default async function handler(req, res) {
         'Authorization': authHeader,
         'Content-Type': 'application/x-www-form-urlencoded'
       },
-      body: formData
+      body: formData.toString()
     });
     
     const data = await response.json();
@@ -73,7 +78,11 @@ export default async function handler(req, res) {
       return res.status(response.status).json({ error: data });
     }
     
-    return res.status(200).json({ success: true, media_id_string: data.media_id_string });
+    return res.status(200).json({ 
+      success: true, 
+      media_id_string: data.media_id_string,
+      media_id: data.media_id
+    });
     
   } catch (error) {
     return res.status(500).json({ error: error.message });
