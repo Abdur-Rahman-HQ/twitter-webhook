@@ -1,4 +1,3 @@
-import fetch from 'node-fetch';
 import crypto from 'crypto';
 
 function generateOAuthHeader(method, url, params, consumerKey, consumerSecret, tokenKey, tokenSecret) {
@@ -48,16 +47,20 @@ export default async function handler(req, res) {
     
     console.log('Downloading image from:', image_url);
     
-    // Download the image
+    // Download the image (fetch is native in Node.js 18+)
     const imageResponse = await fetch(image_url);
     if (!imageResponse.ok) {
-      return res.status(400).json({ error: 'Failed to download image' });
+      return res.status(400).json({ 
+        error: 'Failed to download image',
+        status: imageResponse.status,
+        statusText: imageResponse.statusText
+      });
     }
     
     const imageBuffer = await imageResponse.arrayBuffer();
     const base64Image = Buffer.from(imageBuffer).toString('base64');
     
-    console.log('Image downloaded, size:', imageBuffer.byteLength);
+    console.log('Image downloaded, size:', imageBuffer.byteLength, 'bytes');
     
     // Upload to Twitter using v1.1 API
     const authHeader = generateOAuthHeader(
@@ -79,14 +82,17 @@ export default async function handler(req, res) {
         'Authorization': authHeader,
         'Content-Type': 'application/x-www-form-urlencoded'
       },
-      body: formData
+      body: formData.toString()
     });
     
     const uploadData = await uploadResponse.json();
     
     if (!uploadResponse.ok) {
       console.error('Upload error:', uploadData);
-      return res.status(uploadResponse.status).json({ error: uploadData });
+      return res.status(uploadResponse.status).json({ 
+        error: 'Twitter API error',
+        details: uploadData 
+      });
     }
     
     console.log('Media uploaded successfully:', uploadData.media_id_string);
@@ -102,7 +108,10 @@ export default async function handler(req, res) {
     });
     
   } catch (error) {
-    console.error('Error:', error);
-    return res.status(500).json({ error: error.message });
+    console.error('Error:', error.message);
+    return res.status(500).json({ 
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 }
