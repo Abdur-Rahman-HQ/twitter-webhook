@@ -1,10 +1,84 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Twitter Webhook</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X (Twitter) Webhook API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        h1 { margin-top: 0; }
+        .endpoint {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        .status {
+            display: inline-block;
+            background: #4CAF50;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-    <h1>Twitter API Webhook</h1>
-    <p>API endpoint: /api/tweet</p>
+    <div class="container">
+        <h1>🐦 X (Twitter) API Webhook</h1>
+        <p><span class="status">✓ Active</span></p>
+        
+        <h2>Available Endpoints:</h2>
+        
+        <div class="endpoint">
+            <strong>POST /api/upload-image</strong>
+            <p>Upload image to X and get media ID</p>
+            <code>{"image_url": "https://example.com/image.jpg"}</code>
+        </div>
+        
+        <div class="endpoint">
+            <strong>POST /api/upload-media</strong>
+            <p>Post tweet with text and/or media</p>
+            <code>{"text": "Hello", "media_ids": ["123"]}</code>
+        </div>
+        
+        <div class="endpoint">
+            <strong>POST /api/tweet</strong>
+            <p>Post simple text tweet</p>
+            <code>{"text": "Hello World!"}</code>
+        </div>
+        
+        <div class="endpoint">
+            <strong>GET /api/test-auth</strong>
+            <p>Test API credentials</p>
+        </div>
+        
+        <div class="endpoint">
+            <strong>GET /api/check-limits</strong>
+            <p>Check API rate limits</p>
+        </div>
+        
+        <p style="margin-top: 30px; opacity: 0.8;">
+            Powered by Vercel Serverless Functions | Connected to X API v2
+        </p>
+    </div>
 </body>
 </html>
